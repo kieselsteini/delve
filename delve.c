@@ -277,10 +277,10 @@ Selector *parse_selector(char *str) {
 	if ((p = strstr(str, "gopher://")) == str) str += 9; /* skip "gopher://" */
 	if ((p = strpbrk(str, ":/")) != NULL) {
 		if (*p == ':') {
-			sel->host = str_split(&str, ":");
-			sel->port = str_split(&str, "/");
+			sel->host = str_copy(str_split(&str, ":"));
+			sel->port = str_copy(str_split(&str, "/"));
 		} else {
-			sel->host = str_split(&str, "/");
+			sel->host = str_copy(str_split(&str, "/"));
 			sel->port = str_copy("70");
 		}
 		if (*str) sel->type = *str++;
@@ -428,10 +428,9 @@ Selector *download_to_menu(Selector *sel, const char *query) {
 
 /*============================================================================*/
 const char *find_selector_handler(char type) {
-	char name[32], *data;
+	char name[32];
 	snprintf(name, sizeof(name), "type_%c", type);
-	if ((data = set_var(name, NULL)) == NULL) return NULL;
-	return data;
+	return set_var(name, NULL);
 }
 
 
@@ -453,7 +452,7 @@ void print_menu(Selector *list, const char *filter) {
 }
 
 
-void handle_selector(Selector *to, const char *handler) {
+void execute_handler(const char *handler, Selector *to) {
 	char command[1024], *filename = NULL;
 	size_t l;
 
@@ -504,9 +503,9 @@ void navigate(Selector *to) {
 			break;
 		case 'i': case '3': /* ignore these selectors */
 			break;
-		default:
+		default: /* try to invoke handler */
 			if ((handler = find_selector_handler(to->type)) != NULL) {
-				handle_selector(to, handler);
+				execute_handler(handler, to);
 			} else {
 				error("no handler for type `%c`", to->type);
 			}
@@ -672,6 +671,7 @@ static void cmd_quit(char *line) {
 static void cmd_open(char *line) {
 	Selector *to = parse_selector(next_token(&line));
 	navigate(to);
+	free_selector(to);
 }
 
 
@@ -782,6 +782,7 @@ static const Command gopher_commands[] = {
 };
 
 
+/*============================================================================*/
 void eval(char *str, const char *filename) {
 	static int nested =  0;
 	const Command *cmd;
@@ -882,7 +883,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.5.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.5.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
