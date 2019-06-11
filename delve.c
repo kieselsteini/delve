@@ -438,13 +438,13 @@ void print_menu(Selector *list, const char *filter) {
 	for (; list; list = list->next) {
 		if (filter && !strcasestr(list->name, filter) && !strcasestr(list->path, filter)) continue;
 		switch (list->type) {
-			case 'i': printf("     | %.74s\n", list->name); break;
-			case '3': printf("     | \33[31m%.74s\33[0m\n", list->name); break;
+			case 'i': printf("     | %.76s\n", list->name); break;
+			case '3': printf("     | \33[31m%.76s\33[0m\n", list->name); break;
 			default:
 				if (strchr("145679", list->type) || find_selector_handler(list->type)) {
-					printf("%4d | \33[36;4m%.74s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[36;4m%.76s\33[0m\n", list->index, list->name);
 				} else {
-					printf("%4d | \33[36;0m%.74s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[36;0m%.76s\33[0m\n", list->index, list->name);
 				}
 				break;
 		}
@@ -883,7 +883,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.5.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.5.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
