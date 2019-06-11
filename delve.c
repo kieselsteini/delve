@@ -98,8 +98,10 @@ void str_free(char *str) {
 }
 
 char *str_copy(char *str) {
+	char *new;
 	if (str == NULL || *str == '\0') return "";
-	return strdup(str);
+	if ((new = strdup(str)) == NULL) panic("cannot allocate new string");
+	return new;
 }
 
 char *str_skip(char *str, const char *delim) {
@@ -173,7 +175,7 @@ char *set_var(const char *name, const char *fmt, ...) {
 		va_end(va);
 
 		if (var == NULL) {
-			var = malloc(sizeof(Variable));
+			if ((var = malloc(sizeof(Variable))) == NULL) panic("cannot allocate new variable");
 			var->next = variables;
 			var->name = str_copy((char*)name);
 			var->data = str_copy(buffer);
@@ -189,6 +191,14 @@ char *set_var(const char *name, const char *fmt, ...) {
 
 
 /*============================================================================*/
+Selector *new_selector() {
+	Selector *new = malloc(sizeof(Selector));
+	if (new == NULL) panic("cannot allocate new selector");
+	new->next = NULL;
+	new->index = 0;
+	return new;
+}
+
 void free_selector(Selector *sel) {
 	while (sel) {
 		Selector *next = sel->next;
@@ -203,7 +213,7 @@ void free_selector(Selector *sel) {
 
 
 Selector *copy_selector(Selector *sel) {
-	Selector *new = malloc(sizeof(Selector));
+	Selector *new = new_selector();
 	new->next = NULL;
 	new->index = 1;
 	new->type = sel->type;
@@ -261,7 +271,7 @@ Selector *parse_selector(char *str) {
 	char *p;
 	Selector *sel;
 
-	sel = malloc(sizeof(Selector));
+	sel = new_selector();
 	sel->next = NULL;
 	sel->index = 0;
 	sel->type = '1';
@@ -296,7 +306,7 @@ Selector *parse_selector_list(char *str) {
 	while ((line = str_split(&str, "\r\n")) != NULL) {
 		if (*line == '\0' || *line == '.') break;
 
-		sel = malloc(sizeof(Selector));
+		sel = new_selector();
 		list = append_selector(list, sel);
 
 		sel->type = *line++;
@@ -347,7 +357,7 @@ char *download(Selector *sel, const char *query, size_t *length) {
 	send(fd, request, strlen(request), 0);
 
 	for (total = 0L, data = NULL;;) {
-		data = realloc(data, total + (1024 * 64));
+		if ((data = realloc(data, total + (1024 * 64))) == NULL) panic("cannot allocate download data");
 		if ((received = recv(fd, &data[total], 1024 * 64, 0)) <= 0) break;
 		total += received;
 	}
@@ -874,7 +884,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.5.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.5.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
