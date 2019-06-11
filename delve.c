@@ -57,6 +57,8 @@ typedef struct Help {
 
 /*============================================================================*/
 Variable *variables = NULL;
+Variable *aliases = NULL;
+Variable *typehandlers = NULL;
 Selector *bookmarks = NULL;
 Selector *history = NULL;
 Selector *menu = NULL;
@@ -159,10 +161,10 @@ void free_variable(Variable *var) {
 }
 
 
-char *set_var(const char *name, const char *fmt, ...) {
+char *set_var(Variable **list, const char *name, const char *fmt, ...) {
 	Variable *var;
 
-	for (var = variables; var; var = var->next) {
+	for (var = *list; var; var = var->next) {
 		if (!strcasecmp(var->name, name)) break;
 	}
 
@@ -176,10 +178,10 @@ char *set_var(const char *name, const char *fmt, ...) {
 
 		if (var == NULL) {
 			if ((var = malloc(sizeof(Variable))) == NULL) panic("cannot allocate new variable");
-			var->next = variables;
+			var->next = *list;
 			var->name = str_copy((char*)name);
 			var->data = str_copy(buffer);
-			variables = var;
+			*list = var;
 		} else {
 			str_free(var->data);
 			var->data = str_copy(buffer);
@@ -428,9 +430,8 @@ Selector *download_to_menu(Selector *sel, const char *query) {
 
 /*============================================================================*/
 const char *find_selector_handler(char type) {
-	char name[32];
-	snprintf(name, sizeof(name), "type_%c", type);
-	return set_var(name, NULL);
+	char name[2] = { type, 0 };
+	return set_var(&typehandlers, name, NULL);
 }
 
 
@@ -442,9 +443,9 @@ void print_menu(Selector *list, const char *filter) {
 			case '3': printf("     | \33[31m%.76s\33[0m\n", list->name); break;
 			default:
 				if (strchr("145679", list->type) || find_selector_handler(list->type)) {
-					printf("%4d | \33[36;4m%.76s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[4;36m%.76s\33[0m\n", list->index, list->name);
 				} else {
-					printf("%4d | \33[36;0m%.76s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[0;36m%.76s\33[0m\n", list->index, list->name);
 				}
 				break;
 		}
@@ -514,8 +515,35 @@ void navigate(Selector *to) {
 }
 
 
+void edit_variable(Variable **vars, char *line) {
+	char *name = next_token(&line);
+	char *data = next_token(&line);
+
+	if (name != NULL) {
+		if (data) set_var(vars, name, "%s", data);
+		else puts(set_var(vars, name, NULL));
+	} else {
+		Variable *it;
+		for (it = *vars; it; it = it->next) printf("%s = \"%s\"\n", it->name, it->data);
+	}
+}
+
+
 /*============================================================================*/
 static const Help gopher_help[] = {
+	{
+		"alias",
+		"Syntax:\n" \
+		"    ALIAS [<name>] [<value>]\n" \
+		"\n" \
+		"Description:\n" \
+		"    If no <name> is given it will show all aliases.\n" \
+		"    When <name> is given it will show this specific alias.\n" \
+		"    When both <name> and <value> are defined as new alias is created.\n" \
+		"\n" \
+		"Examples:\n" \
+		"    alias b back # create a shorthand for back\n" \
+	},
 	{
 		"authors",
 		"Credit goes to the following people:\n\n" \
@@ -547,8 +575,9 @@ static const Help gopher_help[] = {
 	{
 		"commands",
 		"available commands\n" \
-		"back          bookmarks     help          history       open\n" \
-		"quit          save          see           set           show\n" \
+		"alias         back          bookmarks     help          history\n" \
+		"open          quit          save          see           set\n" \
+		"show          type\n" \
 	},
 	{
 		"help",
@@ -639,23 +668,17 @@ static const Help gopher_help[] = {
 		"    show all selectors containing the <filter> in name or path.\n"
 	},
 	{
-		"variables",
-		"Type Handlers: type_X\n\n" \
-		"     Variables with that name will define a command which will be\n" \
-		"     executed for the selector type <X>.\n" \
-		"     Example: set type_0 \"less %f\" # will launch `less`\n" \
-		"     Format specifiers:\n" \
-		"         %h - hostname\n" \
-		"         %p - port\n" \
-		"         %s - selector\n" \
-		"         %n - name\n" \
-		"         %f - temporary file (selector will be downloaded)\n" \
-		"         %% - escape %\n" \
+		"type",
+		"Syntax:\n" \
+		"    TYPE [<name>] [<value>]\n" \
 		"\n" \
-		"Aliases: alias_XXXX\n\n" \
-		"     Define an command alias.\n" \
-		"     Example: set alias_b \"back\"\n" \
-		"     Will introduce the command `b` which executes `back`.\n" \
+		"Description:\n" \
+		"    If no <name> is given it will show all type handlers.\n" \
+		"    When <name> is given it will show this specific type handler.\n" \
+		"    If <name> and <value> are defined a new type handler will be installed.\n" \
+		"\n" \
+		"Examples:\n" \
+		"    type 0 \"less %f\" # create a type handler for gopher texts\n" \
 	},
 	{ NULL, NULL }
 };
@@ -748,22 +771,23 @@ static void cmd_bookmarks(char *line) {
 
 
 static void cmd_set(char *line) {
-	char *name = next_token(&line);
-	char *data = next_token(&line);
-
-	if (name != NULL) {
-		if (data) set_var(name, "%s", data);
-		else puts(set_var(name, NULL));
-	} else {
-		Variable *it;
-		for (it = variables; it; it = it->next) printf("%s = \"%s\"\n", it->name, it->data);
-	}
+	edit_variable(&variables, line);
 }
 
 
 static void cmd_see(char *line) {
 	Selector *to = find_selector(menu, line);
 	if (to && !strchr("3i", to->type)) puts(print_selector(to, 1));
+}
+
+
+static void cmd_alias(char *line) {
+	edit_variable(&aliases, line);
+}
+
+
+static void cmd_type(char *line) {
+	edit_variable(&typehandlers, line);
 }
 
 
@@ -778,6 +802,8 @@ static const Command gopher_commands[] = {
 	{ "bookmarks", cmd_bookmarks },
 	{ "set", cmd_set },
 	{ "see", cmd_see },
+	{ "alias", cmd_alias },
+	{ "type", cmd_type },
 	{ NULL, NULL }
 };
 
@@ -786,7 +812,7 @@ static const Command gopher_commands[] = {
 void eval(char *str, const char *filename) {
 	static int nested =  0;
 	const Command *cmd;
-	char *line, *token, *alias, name[256];
+	char *line, *token, *alias;
 	int line_no;
 
 	if (nested >= 10) {
@@ -803,14 +829,13 @@ void eval(char *str, const char *filename) {
 				}
 			}
 			if (cmd->name == NULL) {
-				snprintf(name, sizeof(name), "alias_%s", token);
-				if ((alias = set_var(name, NULL)) != NULL) {
+				if ((alias = set_var(&aliases, token, NULL)) != NULL) {
 					alias = str_copy(alias);
-					eval(alias, name);
+					eval(alias, token);
 					str_free(alias);
 				} else {
-					if (filename) error("unknown command `%s` in file `%s` at line %d", token, filename, line_no);
-					else error("unknown command `%s`", token);
+					if (filename == NULL) error("unknown command `%s`", token);
+					else error("unknown command `%s` in file `%s` at line %d", token, filename, line_no);
 				}
 			}
 		}
@@ -871,6 +896,8 @@ void load_config_files() {
 
 void quit_client() {
 	free_variable(variables);
+	free_variable(aliases);
+	free_variable(typehandlers);
 	free_selector(bookmarks);
 	free_selector(history);
 	free_selector(menu);
@@ -883,7 +910,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.5.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.6.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
