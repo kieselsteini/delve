@@ -679,6 +679,15 @@ static const Help gopher_help[] = {
 		"\n" \
 		"Examples:\n" \
 		"    type 0 \"less %f\" # create a type handler for gopher texts\n" \
+		"\n" \
+		"Format string:\n" \
+		"    The <value> for type handlers can have the following formating options:\n" \
+		"    %% - simply a `%`\n" \
+		"    %h - hostname\n" \
+		"    %p - port\n" \
+		"    %s - selector\n" \
+		"    %n - name\n"
+		"    %f - filename (downloaded to a temporary file prior to execution)\n" \
 	},
 	{ NULL, NULL }
 };
@@ -910,7 +919,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.6.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.6.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
