@@ -272,8 +272,6 @@ Selector *parse_selector(char *str) {
 	Selector *sel;
 
 	sel = new_selector();
-	sel->next = NULL;
-	sel->index = 0;
 	sel->type = '1';
 
 	if ((p = strstr(str, "gopher://")) == str) str += 9; /* skip "gopher://" */
@@ -884,7 +882,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.5.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.5.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
