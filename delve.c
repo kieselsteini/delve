@@ -391,7 +391,7 @@ char *download_to_temp(Selector *sel) {
 		error("cannot create temporary file: %s", strerror(errno));
 		return NULL;
 	}
-	write(fd, data, length);
+	(void)write(fd, data, length);
 	close(fd);
 	free(data);
 	return filename;
@@ -481,7 +481,7 @@ void execute_handler(const char *handler, Selector *to) {
 	}
 	command[l] = '\0';
 
-	system(command);
+	(void)system(command);
 	if (filename) remove(filename);
 }
 
