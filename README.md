@@ -1,6 +1,8 @@
 # delve - a simple terminal gopher client
 Because Gopher should not die!
 
+[![Build Status](https://travis-ci.org/kieselsteini/delve.svg?branch=master)](https://travis-ci.org/kieselsteini/delve)
+
 ## Overview
 - configurable gopher selector handlers
 - powerful shell
