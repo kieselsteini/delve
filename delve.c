@@ -101,7 +101,7 @@ void str_free(char *str) {
 	if (str != NULL && *str != '\0') free(str);
 }
 
-char *str_copy(char *str) {
+char *str_copy(const char *str) {
 	char *new;
 	if (str == NULL || *str == '\0') return "";
 	if ((new = strdup(str)) == NULL) panic("cannot allocate new string");
@@ -844,16 +844,18 @@ static const Command gopher_commands[] = {
 
 
 /*============================================================================*/
-void eval(char *str, const char *filename) {
+void eval(const char *input, const char *filename) {
 	static int nested =  0;
 	const Command *cmd;
-	char *line, *token, *alias;
+	char *str, *line, *token, *alias;
 	int line_no;
 
 	if (nested >= 10) {
 		error("eval() nested too deeply");
 		return;
 	} else ++nested;
+
+	str = str_copy(input); /* copy input as it will be modified */
 
 	for (line_no = 1; (line = str_split(&str, "\r\n")) != NULL; ++line_no) {
 		if ((token = next_token(&line)) != NULL) {
@@ -864,20 +866,17 @@ void eval(char *str, const char *filename) {
 				}
 			}
 			if (cmd->name == NULL) {
-				if ((alias = set_var(&aliases, token, NULL)) != NULL) {
-					alias = str_copy(alias);
-					eval(alias, token);
-					str_free(alias);
-				} else {
+				if ((alias = set_var(&aliases, token, NULL)) != NULL) eval(alias, token);
+				else {
 					if (filename == NULL) error("unknown command `%s`", token);
 					else error("unknown command `%s` in file `%s` at line %d", token, filename, line_no);
 				}
 			}
 		}
-		if (filename == NULL) break; /* prevent read_line() ghost inputs (e.g. `save`) */
 		str = str_skip(str, "\r\n");
 	}
 
+	str_free(str);
 	--nested;
 }
 
@@ -946,7 +945,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
