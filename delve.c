@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -117,6 +118,17 @@ char *str_split(char **str, const char *delim) {
 	for (begin = *str; *str && !strchr(delim, **str); ++*str) ;
 	if (**str != '\0') { **str = '\0'; ++*str; }
 	return begin;
+}
+
+int str_contains(const char *haystack, const char *needle) {
+	const char *a, *b;
+	for (; *haystack; ++haystack) {
+		for (a = haystack, b = needle; *a && *b; ++a, ++b) {
+			if (tolower(*a) != tolower(*b)) break;
+		}
+		if (*b == '\0') return 1;
+	}
+	return 0;
 }
 
 
@@ -440,7 +452,7 @@ const char *find_selector_handler(char type) {
 
 void print_menu(Selector *list, const char *filter) {
 	for (; list; list = list->next) {
-		if (filter && !strcasestr(list->name, filter) && !strcasestr(list->path, filter)) continue;
+		if (filter && !str_contains(list->name, filter) && !str_contains(list->path, filter)) continue;
 		switch (list->type) {
 			case 'i': printf("     | %.76s\n", list->name); break;
 			case '3': printf("     | \33[31m%.76s\33[0m\n", list->name); break;
@@ -923,7 +935,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.6.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
