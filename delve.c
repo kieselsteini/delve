@@ -399,14 +399,24 @@ char *download_to_temp(Selector *sel) {
 	if ((data = download(sel, NULL, &length)) == NULL) return NULL;
 	snprintf(filename, sizeof(filename), "%s", "/tmp/delve.XXXXXXXX");
 	if ((fd = mkstemp(filename)) == -1) {
-		free(data);
 		error("cannot create temporary file: %s", strerror(errno));
-		return NULL;
+		goto fail;
 	}
-	(void)write(fd, data, length);
+	if (write(fd, data, length) != (int)length) {
+		error("cannot write data to temporary file: %s", strerror(errno));
+		goto fail;
+	}
 	close(fd);
 	free(data);
 	return filename;
+
+fail:
+	if (data) free(data);
+	if (fd) {
+		close(fd);
+		remove(filename);
+	}
+	return NULL;
 }
 
 
@@ -493,7 +503,7 @@ void execute_handler(const char *handler, Selector *to) {
 	}
 	command[l] = '\0';
 
-	(void)system(command);
+	if (system(command) == -1) error("could not execute `%s`", command);
 	if (filename) remove(filename);
 }
 
@@ -935,7 +945,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
