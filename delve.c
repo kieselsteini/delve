@@ -394,11 +394,13 @@ fail:
 char *download_to_temp(Selector *sel) {
 	static char filename[1024];
 	size_t length;
-	char *data;
+	char *data, *tmpdir, template[1024];
 	int fd;
 
 	if ((data = download(sel, NULL, &length)) == NULL) return NULL;
-	snprintf(filename, sizeof(filename), "%s", "/tmp/delve.XXXXXXXX");
+	if ((tmpdir = getenv("TMPDIR")) == NULL) tmpdir = "/tmp/";
+	snprintf(template, sizeof(template), "%sdelve.XXXXXXXX", tmpdir);
+	snprintf(filename, sizeof(filename), "%s", template);
 	if ((fd = mkstemp(filename)) == -1) {
 		error("cannot create temporary file: %s", strerror(errno));
 		goto fail;
@@ -945,7 +947,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
