@@ -19,6 +19,7 @@ Because Gopher should not die!
 	- currently tested on
 		- macOS
 		- Linux
+		- OpenBSD 6.5
 
 ## How to contribute?
 - send me pull-requests and I'll review and merge them :)
