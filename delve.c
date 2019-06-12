@@ -142,6 +142,7 @@ char *read_line(const char *fmt, ...) {
 		va_end(va);
 		fflush(stdout);
 	}
+	memset(buffer, 0, sizeof(buffer));
 	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
 	line = str_skip(line, " \v\t");
 	line = str_split(&line, "\r\n");
@@ -850,6 +851,7 @@ void eval(char *str, const char *filename) {
 				}
 			}
 		}
+		if (filename == NULL) break; /* prevent read_line() ghost inputs (e.g. `save`) */
 		str = str_skip(str, "\r\n");
 	}
 
@@ -921,7 +923,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.6.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.6.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
