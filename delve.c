@@ -379,7 +379,7 @@ char *download(Selector *sel, const char *query, size_t *length) {
 	if (total > (1024 * 256)) puts("");
 
 	close(fd);
-	data = realloc(data, total);
+	data = realloc(data, total + 1);
 	data[total] = '\0';
 
 	if (length) *length = total;
@@ -947,7 +947,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.5  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
