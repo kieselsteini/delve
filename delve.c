@@ -849,7 +849,7 @@ static const Command gopher_commands[] = {
 void eval(const char *input, const char *filename) {
 	static int nested =  0;
 	const Command *cmd;
-	char *str, *line, *token, *alias;
+	char *str, *copy, *line, *token, *alias;
 	int line_no;
 
 	if (nested >= 10) {
@@ -857,7 +857,7 @@ void eval(const char *input, const char *filename) {
 		return;
 	} else ++nested;
 
-	str = str_copy(input); /* copy input as it will be modified */
+	str = copy = str_copy(input); /* copy input as it will be modified */
 
 	for (line_no = 1; (line = str_split(&str, "\r\n")) != NULL; ++line_no) {
 		if ((token = next_token(&line)) != NULL) {
@@ -878,7 +878,7 @@ void eval(const char *input, const char *filename) {
 		str = str_skip(str, "\r\n");
 	}
 
-	str_free(str);
+	str_free(copy);
 	--nested;
 }
 
@@ -947,7 +947,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.5  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.7.6  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
