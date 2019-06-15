@@ -20,6 +20,7 @@
 ================================================================================
 */
 /*============================================================================*/
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -29,7 +30,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
 #include <netdb.h>
 #include <unistd.h>
 
