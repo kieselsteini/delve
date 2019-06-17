@@ -300,6 +300,8 @@ Selector *parse_selector(char *str) {
 	char *p;
 	Selector *sel;
 
+	if (str == NULL || *str == '\0') return NULL;
+
 	sel = new_selector();
 	sel->type = '1';
 
@@ -529,6 +531,7 @@ void execute_handler(const char *handler, Selector *to) {
 void navigate(Selector *to) {
 	const char *query = NULL, *handler;
 
+	if (to == NULL) return;
 	switch (to->type) {
 		case '7': /* gopher full-text search */
 			query = read_line("enter gopher search string: ");
@@ -820,9 +823,11 @@ static void cmd_bookmarks(char *line) {
 		char *url = next_token(&line);
 		if (url) {
 			Selector *sel = parse_selector(url);
-			str_free(sel->name);
-			sel->name = str_copy(name);
-			bookmarks = append_selector(bookmarks, sel);
+			if (sel) {
+				str_free(sel->name);
+				sel->name = str_copy(name);
+				bookmarks = append_selector(bookmarks, sel);
+			}
 		} else print_menu(bookmarks, name);
 	}
 }
@@ -1069,7 +1074,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.10.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.10.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
