@@ -11,6 +11,7 @@ Because Gopher should not die!
 - command aliases
 - VT100 compatible with ANSI escape sequences
 - no external dependencies
+	- GNU readline is fully optional
 - less *1k lines* of *C* code
 
 ## How to compile?

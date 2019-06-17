@@ -32,6 +32,11 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#ifdef DELVE_USE_READLINE
+	#include <readline/readline.h>
+	#include <readline/history.h>
+#endif /* DELVE_USE_READLINE */
+
 
 /*============================================================================*/
 typedef struct Selector {
@@ -882,6 +887,61 @@ void eval(const char *input, const char *filename) {
 }
 
 
+#ifdef DELVE_USE_READLINE
+char *shell_name_generator(const char *text, int state) {
+	static int len;
+	static const Command *cmd;
+	static const Variable *alias;
+	const char *name;
+
+	if (!state) {
+		len = strlen(text);
+		cmd = gopher_commands;
+		alias = aliases;
+	}
+
+	for (; cmd->name; ++cmd) {
+		if (!strncasecmp(cmd->name, text, len)) {
+			name = cmd->name;
+			if (cmd->name) ++cmd;
+			return strdup(name);
+		}
+	}
+
+	for (; alias; alias = alias->next) {
+		if (!strncasecmp(alias->name, text, len)) {
+			name = alias->name;
+			alias = alias->next;
+			return strdup(name);
+		}
+	}
+
+	return NULL;
+}
+
+char **shell_name_completion(const char *text, int start, int end) {
+	(void)start; (void)end;
+	rl_attempted_completion_over = 1;
+	return rl_completion_matches(text, shell_name_generator);
+}
+
+void shell() {
+	char *line, *base, prompt[256];
+	Selector *to;
+
+	using_history();
+	rl_attempted_completion_function = shell_name_completion;
+
+	for (;;) {
+		snprintf(prompt, sizeof(prompt), "(\33[35m%s\33[0m)> ", print_selector(history, 0));
+		if ((line = base = readline(prompt)) == NULL) break;
+		add_history(line);
+		if ((to = find_selector(menu, line)) != NULL) navigate(to);
+		else eval(line, NULL);
+		free(base);
+	}
+}
+#else
 void shell() {
 	char *line;
 	Selector *to;
@@ -890,6 +950,7 @@ void shell() {
 		else eval(line, NULL);
 	}
 }
+#endif /* DELVE_USE_READLINE */
 
 
 /*============================================================================*/
@@ -946,7 +1007,7 @@ int main(int argc, char **argv) {
 	(void)argc; (void)argv;
 
 	puts(
-		"delve - 0.7.7  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.8.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
