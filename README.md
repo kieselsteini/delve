@@ -16,7 +16,7 @@ Because Gopher should not die!
 
 ## How to compile?
 - clone this git repo
-- just type `make` on any Unix compatible system
+- just type `make` on any Unix compatible system (or `make linux` for a Unix/Linux with GNU readline)
 	- currently tested on
 		- macOS
 		- Linux

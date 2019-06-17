@@ -1,8 +1,8 @@
 # see LICENSE for copyright and license details
 PREFIX = /usr/local
 CC = cc
-CFLAGS ?= -O2 -Wall -Wextra -DDELVE_USE_READLINE
-LDFLAGS ?= -lreadline
+CFLAGS ?= -O2 -Wall -Wextra $(MYCFLAGS)
+LDFLAGS ?= $(MYLDFLAGS)
 OBJ = delve.o
 BIN = delve
 CONF = delve.conf
@@ -12,6 +12,9 @@ default: $(OBJ)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
+
+linux:
+	$(MAKE) MYCFLAGS=-DDELVE_USE_READLINE MYLDFLAGS=-lreadline
 
 install: default
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin/
