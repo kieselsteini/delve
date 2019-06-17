@@ -8,7 +8,7 @@ BIN = delve
 CONF = delve.conf
 
 default: $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN) $(OBJ)
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS)
 
 clean:
 	@rm -f $(BIN) $(OBJ)
