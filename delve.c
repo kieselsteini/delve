@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <netdb.h>
 #include <unistd.h>
 
@@ -178,6 +179,12 @@ char *set_var(Variable **list, const char *name, const char *fmt, ...) {
 	}
 
 	return var ? var->data : NULL;
+}
+
+
+int get_var_boolean(const char *name) {
+	char *data = set_var(&variables, name, NULL);
+	return data ? (!strcasecmp(data, "on") || !strcasecmp(data, "true")) : 0;
 }
 
 
@@ -479,7 +486,13 @@ const char *find_selector_handler(char type) {
 
 
 void print_menu(Selector *list, const char *filter) {
-	for (; list; list = list->next) {
+	struct winsize wz;
+	int i, pages;
+
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &wz); wz.ws_row -= 2;
+	pages = get_var_boolean("PAGE_MENU");
+
+	for (i = 0; list; list = list->next, ++i) {
 		if (filter && !str_contains(list->name, filter) && !str_contains(list->path, filter)) continue;
 		switch (list->type) {
 			case 'i': printf("     | %.76s\n", list->name); break;
@@ -491,6 +504,12 @@ void print_menu(Selector *list, const char *filter) {
 					printf("%4d | \33[0;36m%.76s\33[0m\n", list->index, list->name);
 				}
 				break;
+		}
+		if (pages && i >= wz.ws_row) {
+			printf("\33[0;32m-- press RETURN to continue --\33[0m");
+			fflush(stdout);
+			getchar();
+			i = 0;
 		}
 	}
 }
@@ -740,6 +759,7 @@ static const Help gopher_help[] = {
 		"Following variables are used by delve:\n" \
 		"\tHOME_HOLE - the gopher URL which will be opened on startup\n" \
 		"\tDOWNLOAD_DIRECTORY - the directory which will be default for downloads\n" \
+		"\tPAGE_MENU - when `on` or `true` menus will be paged\n" \
 	},
 	{ NULL, NULL }
 };
@@ -1074,7 +1094,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.10.5  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.11.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
