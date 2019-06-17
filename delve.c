@@ -138,44 +138,6 @@ int str_contains(const char *haystack, const char *needle) {
 
 
 /*============================================================================*/
-char *set_var(Variable **list, const char *name, const char *fmt, ...);
-
-char *next_token(char **str) {
-	if (*str == NULL) return NULL;
-	*str = str_skip(*str, " \v\t");
-	switch (**str) {
-		case '\0': case '#': return NULL;
-		case '"': ++*str; return str_split(str, "\"");
-		case '$': {
-			char *data;
-			++*str;
-			data = set_var(&variables, str_split(str, " \v\t"), NULL);
-			return data ? data : "";
-		}
-		default: return str_split(str, " \v\t");
-	}
-}
-
-
-char *read_line(const char *fmt, ...) {
-	static char buffer[256];
-	char *line;
-	if (fmt != NULL) {
-		va_list va;
-		va_start(va, fmt);
-		vprintf(fmt, va);
-		va_end(va);
-		fflush(stdout);
-	}
-	memset(buffer, 0, sizeof(buffer));
-	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
-	line = str_skip(line, " \v\t");
-	line = str_split(&line, "\r\n");
-	return line ? line : "";
-}
-
-
-/*============================================================================*/
 void free_variable(Variable *var) {
 	while (var) {
 		Variable *next = var->next;
@@ -348,6 +310,42 @@ Selector *parse_selector_list(char *str) {
 	}
 
 	return list;
+}
+
+
+/*============================================================================*/
+char *next_token(char **str) {
+	if (*str == NULL) return NULL;
+	*str = str_skip(*str, " \v\t");
+	switch (**str) {
+		case '\0': case '#': return NULL;
+		case '"': ++*str; return str_split(str, "\"");
+		case '$': {
+			char *data;
+			++*str;
+			data = set_var(&variables, str_split(str, " \v\t"), NULL);
+			return data ? data : "";
+		}
+		default: return str_split(str, " \v\t");
+	}
+}
+
+
+char *read_line(const char *fmt, ...) {
+	static char buffer[256];
+	char *line;
+	if (fmt != NULL) {
+		va_list va;
+		va_start(va, fmt);
+		vprintf(fmt, va);
+		va_end(va);
+		fflush(stdout);
+	}
+	memset(buffer, 0, sizeof(buffer));
+	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
+	line = str_skip(line, " \v\t");
+	line = str_split(&line, "\r\n");
+	return line ? line : "";
 }
 
 
@@ -1076,7 +1074,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.10.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.10.5  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
