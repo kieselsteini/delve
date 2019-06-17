@@ -138,12 +138,20 @@ int str_contains(const char *haystack, const char *needle) {
 
 
 /*============================================================================*/
+char *set_var(Variable **list, const char *name, const char *fmt, ...);
+
 char *next_token(char **str) {
 	if (*str == NULL) return NULL;
 	*str = str_skip(*str, " \v\t");
 	switch (**str) {
 		case '\0': case '#': return NULL;
 		case '"': ++*str; return str_split(str, "\"");
+		case '$': {
+			char *data;
+			++*str;
+			data = set_var(&variables, str_split(str, " \v\t"), NULL);
+			return data ? data : "";
+		}
 		default: return str_split(str, " \v\t");
 	}
 }
@@ -182,6 +190,7 @@ void free_variable(Variable *var) {
 char *set_var(Variable **list, const char *name, const char *fmt, ...) {
 	Variable *var;
 
+	if (name == NULL) return NULL;
 	for (var = *list; var; var = var->next) {
 		if (!strcasecmp(var->name, name)) break;
 	}
@@ -566,43 +575,43 @@ static const Help gopher_help[] = {
 	{
 		"alias",
 		"Syntax:\n" \
-		"    ALIAS [<name>] [<value>]\n" \
+		"\tALIAS [<name>] [<value>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    If no <name> is given it will show all aliases.\n" \
-		"    When <name> is given it will show this specific alias.\n" \
-		"    When both <name> and <value> are defined as new alias is created.\n" \
+		"\tIf no <name> is given it will show all aliases.\n" \
+		"\tWhen <name> is given it will show this specific alias.\n" \
+		"\tWhen both <name> and <value> are defined as new alias is created.\n" \
 		"\n" \
 		"Examples:\n" \
-		"    alias b back # create a shorthand for back\n" \
+		"\talias b back # create a shorthand for back\n" \
 	},
 	{
 		"authors",
 		"Credit goes to the following people:\n\n" \
-		"Sebastian Steinhauer <s.steinhauer@yahoo.de>\n" \
+		"\tSebastian Steinhauer <s.steinhauer@yahoo.de>\n" \
 	},
 	{
 		"back",
 		"Syntax:\n" \
-		"    BACK\n" \
+		"\tBACK\n" \
 		"\n" \
 		"Description:\n" \
-		"    Go back in history.\n" \
+		"\tGo back in history.\n" \
 	},
 	{
 		"bookmarks",
 		"Syntax:\n" \
-		"    BOOKMARKS [<item-id>]\n" \
+		"\tBOOKMARKS [<item-id>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    Show all defined bookmarks.\n" \
-		"    If <item-id> is specified, navigate to the given <item-id> from bookmarks.\n" \
+		"\tShow all defined bookmarks.\n" \
+		"\tIf <item-id> is specified, navigate to the given <item-id> from bookmarks.\n" \
 		"\n\n" \
 		"Syntax:\n" \
-		"    BOOKMARKS <name> <url>\n" \
+		"\tBOOKMARKS <name> <url>\n" \
 		"\n" \
 		"Description:\n" \
-		"    Define a new bookmark with the given <name> and <url>.\n" \
+		"\tDefine a new bookmark with the given <name> and <url>.\n" \
 	},
 	{
 		"commands",
@@ -614,19 +623,19 @@ static const Help gopher_help[] = {
 	{
 		"help",
 		"Syntax:\n" \
-		"    HELP [<topic>]\n" \
+		"\tHELP [<topic>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    Show all help topics or the help text for a specific <topic>.\n" \
+		"\tShow all help topics or the help text for a specific <topic>.\n" \
 	},
 	{
 		"history",
 		"Syntax:\n" \
-		"    HISTORY [<item-id>]\n" \
+		"\tHISTORY [<item-id>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    Show the current history.\n" \
-		"    If <item-id> is specified, navigate to the given <item-id> from history.\n" \
+		"\tShow the current history.\n" \
+		"\tIf <item-id> is specified, navigate to the given <item-id> from history.\n" \
 	},
 	{
 		"license",
@@ -649,77 +658,82 @@ static const Help gopher_help[] = {
 	{
 		"open",
 		"Syntax:\n" \
-		"    OPEN <url>\n" \
+		"\tOPEN <url>\n" \
 		"\n" \
 		"Description:\n" \
-		"    Opens the given <url> as a gopher menu.\n" \
+		"\tOpens the given <url> as a gopher menu.\n" \
 	},
 	{
 		"quit",
 		"Syntax:\n" \
-		"    QUIT\n" \
+		"\tQUIT\n" \
 		"\n" \
 		"Description:\n" \
-		"    Quit the gopher client.\n"
+		"\tQuit the gopher client.\n"
 	},
 	{
 		"save",
 		"Syntax:\n" \
-		"    SAVE <item-id>\n" \
+		"\tSAVE <item-id>\n" \
 		"\n" \
 		"Description:\n" \
-		"    Saves the given <item-id> from the menu to the disk.\n" \
-		"    You will be asked for a filename.\n" \
+		"\tSaves the given <item-id> from the menu to the disk.\n" \
+		"\tYou will be asked for a filename.\n" \
 	},
 	{
 		"see",
 		"Syntax:\n" \
-		"    SAVE <item-id>\n" \
+		"\tSAVE <item-id>\n" \
 		"\n" \
 		"Description:\n" \
-		"    Show the full gopher URL for the menu selector id.\n" \
+		"\tShow the full gopher URL for the menu selector id.\n" \
 	},
 	{
 		"set",
 		"Syntax:\n" \
-		"    SET [<name>] [<value>]\n" \
+		"\tSET [<name>] [<value>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    If no <name> is given it will show all variables.\n" \
-		"    When <name> is given it will show this specific variable.\n" \
-		"    If <data> is specified the variable will have this value.\n" \
-		"    When the variable does not exist the variable will be created.\n" \
+		"\tIf no <name> is given it will show all variables.\n" \
+		"\tWhen <name> is given it will show this specific variable.\n" \
+		"\tIf <data> is specified the variable will have this value.\n" \
+		"\tWhen the variable does not exist the variable will be created.\n" \
 	},
 	{
 		"show",
 		"Syntax:\n" \
-		"    SHOW [<filter>]\n" \
+		"\tSHOW [<filter>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    Show the current gopher menu. If a <filter> is specified, it will\n" \
-		"    show all selectors containing the <filter> in name or path.\n"
+		"\tShow the current gopher menu. If a <filter> is specified, it will\n" \
+		"\tshow all selectors containing the <filter> in name or path.\n"
 	},
 	{
 		"type",
 		"Syntax:\n" \
-		"    TYPE [<name>] [<value>]\n" \
+		"\tTYPE [<name>] [<value>]\n" \
 		"\n" \
 		"Description:\n" \
-		"    If no <name> is given it will show all type handlers.\n" \
-		"    When <name> is given it will show this specific type handler.\n" \
-		"    If <name> and <value> are defined a new type handler will be installed.\n" \
+		"\tIf no <name> is given it will show all type handlers.\n" \
+		"\tWhen <name> is given it will show this specific type handler.\n" \
+		"\tIf <name> and <value> are defined a new type handler will be installed.\n" \
 		"\n" \
 		"Examples:\n" \
-		"    type 0 \"less %f\" # create a type handler for gopher texts\n" \
+		"\ttype 0 \"less %f\" # create a type handler for gopher texts\n" \
 		"\n" \
 		"Format string:\n" \
-		"    The <value> for type handlers can have the following formating options:\n" \
-		"    %% - simply a `%`\n" \
-		"    %h - hostname\n" \
-		"    %p - port\n" \
-		"    %s - selector\n" \
-		"    %n - name\n"
-		"    %f - filename (downloaded to a temporary file prior to execution)\n" \
+		"\tThe <value> for type handlers can have the following formating options:\n" \
+		"\t%% - simply a `%`\n" \
+		"\t%h - hostname\n" \
+		"\t%p - port\n" \
+		"\t%s - selector\n" \
+		"\t%n - name\n"
+		"\t%f - filename (downloaded to a temporary file prior to execution)\n" \
+	},
+	{
+		"variables",
+		"Following variables are used by delve:\n" \
+		"\tHOMEHOLE - the gopher URL which will be opened on startup\n" \
 	},
 	{ NULL, NULL }
 };
@@ -932,6 +946,8 @@ void shell() {
 	using_history();
 	rl_attempted_completion_function = shell_name_completion;
 
+	eval("open $HOMEHOLE", NULL);
+
 	for (;;) {
 		snprintf(prompt, sizeof(prompt), "(\33[35m%s\33[0m)> ", print_selector(history, 0));
 		if ((line = base = readline(prompt)) == NULL) break;
@@ -945,6 +961,9 @@ void shell() {
 void shell() {
 	char *line;
 	Selector *to;
+
+	eval("open $HOMEHOLE", NULL);
+
 	while ((line = read_line("(\33[35m%s\33[0m)> ", print_selector(history, 0))) != NULL) {
 		if ((to = find_selector(menu, line)) != NULL) navigate(to);
 		else eval(line, NULL);
@@ -991,6 +1010,44 @@ void load_config_files() {
 }
 
 
+int check_argument(int argc, char **argv, const char *name) {
+	int i;
+	for (i = 1; i < argc; ++i) if (!strcmp(argv[i], name)) return i;
+	return 0;
+}
+
+
+const char *check_parameter(int argc, char **argv, const char *name) {
+	int i = check_argument(argc, argv, name);
+	return i && i + 1 < argc ? argv[i + 1] : NULL;
+}
+
+
+void parse_arguments(int argc, char **argv) {
+	const char *arg;
+
+	if (check_argument(argc, argv, "-h") || check_argument(argc, argv, "--help")) {
+		puts(
+			"usage: delve [-h] [--help] [-o gopher-url] [--open gopher-url]\n" \
+			"\t[-c file] [--config file]\n" \
+		);
+		exit(EXIT_SUCCESS);
+	}
+	if ((arg = check_parameter(argc, argv, "-o")) != NULL) {
+		set_var(&variables, "HOMEHOLE", "%s", arg);
+	}
+	if ((arg = check_parameter(argc, argv, "--open")) != NULL) {
+		set_var(&variables, "HOMEHOLE", "%s", arg);
+	}
+	if ((arg = check_parameter(argc, argv, "-c")) != NULL) {
+		load_config_file(arg);
+	}
+	if ((arg = check_parameter(argc, argv, "--config")) != NULL) {
+		load_config_file(arg);
+	}
+}
+
+
 void quit_client() {
 	free_variable(variables);
 	free_variable(aliases);
@@ -1004,10 +1061,12 @@ void quit_client() {
 
 int main(int argc, char **argv) {
 	atexit(quit_client);
-	(void)argc; (void)argv;
+
+	load_config_files();
+	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.8.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.9.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
@@ -1015,7 +1074,6 @@ int main(int argc, char **argv) {
 		"Type `help` for help.\n" \
 	);
 
-	load_config_files();
 	shell();
 
 	return 0;
