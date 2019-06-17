@@ -6,4 +6,4 @@ compiler:
   - gcc
   - clang
 
-script: make -B linux && make -B
+script: make
