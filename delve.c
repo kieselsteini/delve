@@ -437,16 +437,18 @@ fail:
 
 
 void download_to_file(Selector *sel) {
-	char *filename, *def, *data;
+	char *filename, *def, *data, *download_dir, suggestion[1024];
 	size_t length;
 	FILE *fp;
 
 	def = strrchr(sel->path, '/');
 	if (*def == '/') ++def;
+	if ((download_dir = set_var(&variables, "DOWNLOAD_DIRECTORY", NULL)) == NULL) download_dir = ".";
+	snprintf(suggestion, sizeof(suggestion), "%s/%s", download_dir, def);
 
 	if ((data = download(sel, NULL, &length)) == NULL) return;
-	if ((filename = read_line("enter filename (press ENTER for `%s`): ", def)) == NULL) return;
-	if (!strlen(filename)) filename = def;
+	if ((filename = read_line("enter filename (press ENTER for `%s`): ", suggestion)) == NULL) return;
+	if (!strlen(filename)) filename = suggestion;
 	if ((fp = fopen(filename, "wb")) == NULL) {
 		free(data);
 		error("cannot create file `%s`: %s", filename, strerror(errno));
@@ -733,7 +735,8 @@ static const Help gopher_help[] = {
 	{
 		"variables",
 		"Following variables are used by delve:\n" \
-		"\tHOMEHOLE - the gopher URL which will be opened on startup\n" \
+		"\tHOME_HOLE - the gopher URL which will be opened on startup\n" \
+		"\tDOWNLOAD_DIRECTORY - the directory which will be default for downloads\n" \
 	},
 	{ NULL, NULL }
 };
@@ -946,7 +949,7 @@ void shell() {
 	using_history();
 	rl_attempted_completion_function = shell_name_completion;
 
-	eval("open $HOMEHOLE", NULL);
+	eval("open $HOME_HOLE", NULL);
 
 	for (;;) {
 		snprintf(prompt, sizeof(prompt), "(\33[35m%s\33[0m)> ", print_selector(history, 0));
@@ -962,7 +965,7 @@ void shell() {
 	char *line;
 	Selector *to;
 
-	eval("open $HOMEHOLE", NULL);
+	eval("open $HOME_HOLE", NULL);
 
 	while ((line = read_line("(\33[35m%s\33[0m)> ", print_selector(history, 0))) != NULL) {
 		if ((to = find_selector(menu, line)) != NULL) navigate(to);
@@ -1034,10 +1037,10 @@ void parse_arguments(int argc, char **argv) {
 		exit(EXIT_SUCCESS);
 	}
 	if ((arg = check_parameter(argc, argv, "-o")) != NULL) {
-		set_var(&variables, "HOMEHOLE", "%s", arg);
+		set_var(&variables, "HOME_HOLE", "%s", arg);
 	}
 	if ((arg = check_parameter(argc, argv, "--open")) != NULL) {
-		set_var(&variables, "HOMEHOLE", "%s", arg);
+		set_var(&variables, "HOME_HOLE", "%s", arg);
 	}
 	if ((arg = check_parameter(argc, argv, "-c")) != NULL) {
 		load_config_file(arg);
@@ -1066,7 +1069,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.9.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.10.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
