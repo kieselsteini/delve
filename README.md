@@ -5,14 +5,14 @@ Because Gopher should not die!
 
 ## Overview
 - configurable gopher selector handlers
-- powerful shell
+- "powerful" shell
 - bookmarks
 - variables
 - command aliases
 - VT100 compatible with ANSI escape sequences
 - no external dependencies
 	- GNU readline is fully optional
-- less *1k lines* of *C* code
+- less than *1k lines* of *C* code
 
 ## How to compile?
 - clone this git repo
@@ -21,12 +21,19 @@ Because Gopher should not die!
 		- macOS
 		- Linux
 		- OpenBSD 6.5
+- type `make install` to install it on the system (defaults to /usr/local)
 
 ## How to contribute?
 - send me pull-requests and I'll review and merge them :)
+- if you wish to appear on the `help authors` command just add yourself there
 
 ## License
-- GPLv3
+- [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
+
+## Statistic
+Language|files|blank|comment|code
+:-------|-------:|-------:|-------:|-------:
+C|1|174|33|877
 
 ## Help
 Just type `help` when the client is running.
