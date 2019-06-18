@@ -524,7 +524,7 @@ void print_menu(Selector *list, const char *filter) {
 	height = get_terminal_height();
 	pages = get_var_boolean("PAGE_TEXT");
 
-	for (i = 0; list; list = list->next, ++i) {
+	for (i = 0; list; list = list->next) {
 		if (filter && !str_contains(list->name, filter) && !str_contains(list->path, filter)) continue;
 		switch (list->type) {
 			case 'i': printf("     | %.76s\n", list->name); break;
@@ -537,7 +537,7 @@ void print_menu(Selector *list, const char *filter) {
 				}
 				break;
 		}
-		if (pages && i >= height) { show_pager_stop(); i = 0; }
+		if (pages && ++i >= height) { show_pager_stop(); i = 0; }
 	}
 }
 
@@ -1125,7 +1125,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.12.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.12.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
@@ -1138,4 +1138,3 @@ int main(int argc, char **argv) {
 	return 0;
 }
 /* vim: set ts=4 sw=4 noexpandtab: */
-
