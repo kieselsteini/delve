@@ -12,6 +12,7 @@ Because Gopher should not die!
 - VT100 compatible with ANSI escape sequences
 - no external dependencies
 	- GNU readline is fully optional
+- internal pager for text & menus
 - less than *1k lines* of *C* code
 
 ## How to compile?
@@ -33,7 +34,7 @@ Because Gopher should not die!
 ## Statistic
 Language|files|blank|comment|code
 :-------|-------:|-------:|-------:|-------:
-C|1|174|33|882
+C|1|187|33|920
 
 ## Help
 Just type `help` when the client is running.

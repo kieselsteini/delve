@@ -356,6 +356,39 @@ char *read_line(const char *fmt, ...) {
 }
 
 
+int get_terminal_height() {
+	struct winsize wz;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &wz);
+	return wz.ws_row - 2; /* substract 2 lines (1 for tmux etc., 1 for the prompt) */
+}
+
+
+void show_pager_stop() {
+	char buffer[256];
+
+	printf("\33[0;32m-- press RETURN to continue --\33[0m");
+	fflush(stdout);
+	fgets(buffer, sizeof(buffer), stdin);
+}
+
+
+void print_text(const char *text) {
+	char *copy, *str, *line;
+	int i, pages, height;
+
+	height = get_terminal_height();
+	pages = get_var_boolean("PAGE_TEXT");
+
+	copy = str = str_copy(text);
+	for (i = 0; (line = str_split(&str, "\r\n")) != NULL; ++i) {
+		puts(line);
+		if (pages && i >= height) { show_pager_stop(); i = 0; }
+		str = str_skip(str, "\r"); /* just skip CR so we can show empty lines */
+	}
+	str_free(copy);
+}
+
+
 /*============================================================================*/
 char *download(Selector *sel, const char *query, size_t *length) {
 	struct addrinfo hints, *result, *it;
@@ -486,11 +519,10 @@ const char *find_selector_handler(char type) {
 
 
 void print_menu(Selector *list, const char *filter) {
-	struct winsize wz;
-	int i, pages;
+	int i, height, pages;
 
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &wz); wz.ws_row -= 2;
-	pages = get_var_boolean("PAGE_MENU");
+	height = get_terminal_height();
+	pages = get_var_boolean("PAGE_TEXT");
 
 	for (i = 0; list; list = list->next, ++i) {
 		if (filter && !str_contains(list->name, filter) && !str_contains(list->path, filter)) continue;
@@ -505,12 +537,7 @@ void print_menu(Selector *list, const char *filter) {
 				}
 				break;
 		}
-		if (pages && i >= wz.ws_row) {
-			printf("\33[0;32m-- press RETURN to continue --\33[0m");
-			fflush(stdout);
-			getchar();
-			i = 0;
-		}
+		if (pages && i >= height) { show_pager_stop(); i = 0; }
 	}
 }
 
@@ -570,6 +597,10 @@ void navigate(Selector *to) {
 		default: /* try to invoke handler */
 			if ((handler = find_selector_handler(to->type)) != NULL) {
 				execute_handler(handler, to);
+			} else if (to->type == '0') { /* type 0 can be paged internally */
+				char *text = download(to, NULL, NULL);
+				print_text(text);
+				if (text != NULL) free(text);
 			} else {
 				error("no handler for type `%c`", to->type);
 			}
@@ -759,7 +790,7 @@ static const Help gopher_help[] = {
 		"Following variables are used by delve:\n" \
 		"\tHOME_HOLE - the gopher URL which will be opened on startup\n" \
 		"\tDOWNLOAD_DIRECTORY - the directory which will be default for downloads\n" \
-		"\tPAGE_MENU - when `on` or `true` menus will be paged\n" \
+		"\tPAGE_TEXT - when `on` or `true` menus & text will be paged\n" \
 	},
 	{ NULL, NULL }
 };
@@ -812,7 +843,7 @@ static void cmd_help(char *line) {
 	if (topic) {
 		for (help = gopher_help; help->name; ++help) {
 			if (!strcasecmp(help->name, topic)) {
-				if (help->text) puts(help->text);
+				if (help->text) print_text(help->text);
 				else printf("sorry topic `%s` has no text yet :(\n", topic);
 				return;
 			}
@@ -1094,7 +1125,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.11.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.12.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
