@@ -364,11 +364,11 @@ int get_terminal_height() {
 
 
 void show_pager_stop() {
-	char buffer[256];
+	char buffer[256], *line;
 
 	printf("\33[0;32m-- press RETURN to continue --\33[0m");
 	fflush(stdout);
-	fgets(buffer, sizeof(buffer), stdin);
+	line = fgets(buffer, sizeof(buffer), stdin); (void)line;
 }
 
 
@@ -1125,7 +1125,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.12.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.12.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
@@ -1137,4 +1137,5 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-/* vim: set ts=4:sw=4 noexpandtab */
+/* vim: set ts=4 sw=4 noexpandtab: */
+
