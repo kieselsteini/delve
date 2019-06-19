@@ -667,10 +667,11 @@ static const Help gopher_help[] = {
 	{
 		"bookmarks",
 		"Syntax:\n" \
-		"\tBOOKMARKS [<item-id>]\n" \
+		"\tBOOKMARKS [<filter>]/[<item-id>]\n" \
 		"\n" \
 		"Description:\n" \
-		"\tShow all defined bookmarks.\n" \
+		"\tShow all defined bookmarks. If a <filter> is specified, it will\n" \
+		"\tshow all selectors containing the <filter> in name or path.\n" \
 		"\tIf <item-id> is specified, navigate to the given <item-id>\n" \
 		"\tfrom bookmarks.\n" \
 		"\n\n" \
@@ -698,10 +699,11 @@ static const Help gopher_help[] = {
 	{
 		"history",
 		"Syntax:\n" \
-		"\tHISTORY [<item-id>]\n" \
+		"\tHISTORY [<filter>]/[<item-id>]\n" \
 		"\n" \
 		"Description:\n" \
-		"\tShow the current history.\n" \
+		"\tShow the gopher history. If a <filter> is specified, it will\n" \
+		"\tshow all selectors containing the <filter> in name or path.\n" \
 		"\tIf <item-id> is specified, navigate to the given <item-id>\n" \
 		"\tfrom history.\n" \
 	},
@@ -1122,7 +1124,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.15.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.15.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
