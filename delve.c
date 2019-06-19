@@ -1069,41 +1069,24 @@ void load_config_files() {
 }
 
 
-int check_argument(int argc, char **argv, const char *name) {
-	int i;
-	for (i = 1; i < argc; ++i) if (!strcmp(argv[i], name)) return i;
-	return 0;
-}
-
-
-const char *check_parameter(int argc, char **argv, const char *name) {
-	int i = check_argument(argc, argv, name);
-	return i && i + 1 < argc ? argv[i + 1] : NULL;
-}
-
-
 void parse_arguments(int argc, char **argv) {
-	const char *arg;
+	int ch;
+	while ((ch = getopt(argc, argv, "c:")) != -1) {
+		switch (ch) {
+			case 'c':
+				load_config_file(optarg);
+				break;
+			default:
+				fprintf(stderr,
+					"usage: delve [-c config-file] [url]\n"
+				);
+				exit(EXIT_SUCCESS);
+				break;
+		}
+	}
 
-	if (check_argument(argc, argv, "-h") || check_argument(argc, argv, "--help")) {
-		puts(
-			"usage: delve [-h] [--help] [-o gopher-url] [--open gopher-url]\n" \
-			"\t[-c file] [--config file]\n" \
-		);
-		exit(EXIT_SUCCESS);
-	}
-	if ((arg = check_parameter(argc, argv, "-o")) != NULL) {
-		set_var(&variables, "HOME_HOLE", "%s", arg);
-	}
-	if ((arg = check_parameter(argc, argv, "--open")) != NULL) {
-		set_var(&variables, "HOME_HOLE", "%s", arg);
-	}
-	if ((arg = check_parameter(argc, argv, "-c")) != NULL) {
-		load_config_file(arg);
-	}
-	if ((arg = check_parameter(argc, argv, "--config")) != NULL) {
-		load_config_file(arg);
-	}
+	argc -= optind; argv += optind;
+	if (argc > 0) set_var(&variables, "HOME_HOLE", "%s", argv[0]);
 }
 
 
@@ -1125,7 +1108,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.12.2  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.13.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
