@@ -363,12 +363,14 @@ int get_terminal_height() {
 }
 
 
-void show_pager_stop() {
+int show_pager_stop() {
 	char buffer[256], *line;
 
-	printf("\33[0;32m-- press RETURN to continue --\33[0m");
+	printf("\33[0;32m-- press RETURN to continue (or 'q' and return to quit) --\33[0m");
 	fflush(stdout);
-	line = fgets(buffer, sizeof(buffer), stdin); (void)line;
+	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return 1;
+	line = str_skip(line, " \t\v");
+	return line[0] == 'q' || line[0] == 'Q';
 }
 
 
@@ -382,7 +384,7 @@ void print_text(const char *text) {
 	copy = str = str_copy(text);
 	for (i = 0; (line = str_split(&str, "\r\n")) != NULL; ++i) {
 		puts(line);
-		if (pages && i >= height) { show_pager_stop(); i = 0; }
+		if (pages && i >= height) { if (show_pager_stop()) break; i = 0; }
 		str = str_skip(str, "\r"); /* just skip CR so we can show empty lines */
 	}
 	str_free(copy);
@@ -537,7 +539,7 @@ void print_menu(Selector *list, const char *filter) {
 				}
 				break;
 		}
-		if (pages && ++i >= height) { show_pager_stop(); i = 0; }
+		if (pages && ++i >= height) { if (show_pager_stop()) break; i = 0; }
 	}
 }
 
@@ -1108,7 +1110,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.13.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.14.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
