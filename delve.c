@@ -383,7 +383,7 @@ int show_pager_stop() {
 
 
 void print_text(const char *text) {
-	char *copy, *str, *line;
+	char *copy, *str, *line, *p;
 	int i, pages, height, length;
 
 	height = get_terminal_height();
@@ -391,7 +391,8 @@ void print_text(const char *text) {
 	length = get_var_integer("LINE_LENGTH", 128);
 
 	copy = str = str_copy(text);
-	for (i = 0; (line = str_split(&str, "\r\n")) != NULL; ++i) {
+	for (i = 0; (line = str_split(&str, "\n")) != NULL; ++i) {
+		for (p = line; *p; ++p) if (*p == '\r') *p = '\0'; /* remove any CR */
 		printf("%.*s\n", length, line);
 		if (pages && i >= height) { if (show_pager_stop()) break; i = 0; }
 		str = str_skip(str, "\r"); /* just skip CR so we can show empty lines */
@@ -1121,7 +1122,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.15.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.15.1  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
