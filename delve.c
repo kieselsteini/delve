@@ -188,6 +188,14 @@ int get_var_boolean(const char *name) {
 }
 
 
+int get_var_integer(const char *name, int def) {
+	int value;
+	char *data = set_var(&variables, name, NULL);
+	if (data == NULL || sscanf(data, "%d", &value) != 1) return def;
+	return value;
+}
+
+
 /*============================================================================*/
 Selector *new_selector() {
 	Selector *new = malloc(sizeof(Selector));
@@ -376,14 +384,15 @@ int show_pager_stop() {
 
 void print_text(const char *text) {
 	char *copy, *str, *line;
-	int i, pages, height;
+	int i, pages, height, length;
 
 	height = get_terminal_height();
 	pages = get_var_boolean("PAGE_TEXT");
+	length = get_var_integer("LINE_LENGTH", 128);
 
 	copy = str = str_copy(text);
 	for (i = 0; (line = str_split(&str, "\r\n")) != NULL; ++i) {
-		puts(line);
+		printf("%.*s\n", length, line);
 		if (pages && i >= height) { if (show_pager_stop()) break; i = 0; }
 		str = str_skip(str, "\r"); /* just skip CR so we can show empty lines */
 	}
@@ -521,21 +530,22 @@ const char *find_selector_handler(char type) {
 
 
 void print_menu(Selector *list, const char *filter) {
-	int i, height, pages;
+	int i, height, pages, length;
 
 	height = get_terminal_height();
 	pages = get_var_boolean("PAGE_TEXT");
+	length = get_var_integer("LINE_LENGTH", 128);
 
 	for (i = 0; list; list = list->next) {
 		if (filter && !str_contains(list->name, filter) && !str_contains(list->path, filter)) continue;
 		switch (list->type) {
-			case 'i': printf("     | %.76s\n", list->name); break;
-			case '3': printf("     | \33[31m%.76s\33[0m\n", list->name); break;
+			case 'i': printf("     | %.*s\n", length, list->name); break;
+			case '3': printf("     | \33[31m%.*s\33[0m\n", length, list->name); break;
 			default:
 				if (strchr("145679", list->type) || find_selector_handler(list->type)) {
-					printf("%4d | \33[4;36m%.76s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[4;36m%.*s\33[0m\n", list->index, length, list->name);
 				} else {
-					printf("%4d | \33[0;36m%.76s\33[0m\n", list->index, list->name);
+					printf("%4d | \33[0;36m%.*s\33[0m\n", list->index, length, list->name);
 				}
 				break;
 		}
@@ -793,6 +803,7 @@ static const Help gopher_help[] = {
 		"\tHOME_HOLE - the gopher URL which will be opened on startup\n" \
 		"\tDOWNLOAD_DIRECTORY - the directory which will be default for downloads\n" \
 		"\tPAGE_TEXT - when `on` or `true` menus & text will be paged\n" \
+		"\tLINE_LENGTH - defines how long a menu/text line will be displayed\n" \
 	},
 	{ NULL, NULL }
 };
@@ -1110,7 +1121,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.14.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.15.0  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
