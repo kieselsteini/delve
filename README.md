@@ -34,7 +34,7 @@ Because Gopher should not die!
 ## Statistic
 Language|files|blank|comment|code
 :-------|-------:|-------:|-------:|-------:
-C|1|187|33|920
+C|1|183|33|907
 
 ## Help
 Just type `help` when the client is running.
