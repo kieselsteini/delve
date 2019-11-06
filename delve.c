@@ -754,7 +754,7 @@ static const Help gopher_help[] = {
 	{
 		"see",
 		"Syntax:\n" \
-		"\tSAVE <item-id>\n" \
+		"\tSEE <item-id>\n" \
 		"\n" \
 		"Description:\n" \
 		"\tShow the full gopher URL for the menu selector id.\n" \
@@ -1125,7 +1125,7 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	puts(
-		"delve - 0.15.3  Copyright (C) 2019  Sebastian Steinhauer\n" \
+		"delve - 0.15.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
 		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 		"This is free software, and you are welcome to redistribute it\n" \
 		"under certain conditions; type `help license' for details.\n" \
